@@ -10,8 +10,11 @@ if (ksFile.canRead()) {
         android.signingConfigs.sign.keyPassword props['KEYSTORE_ALIAS_PASSWORD']
     }
 } else {
-    android.signingConfigs.sign.storeFile = android.signingConfigs.debug.storeFile
-    android.signingConfigs.sign.storePassword = android.signingConfigs.debug.storePassword
-    android.signingConfigs.sign.keyAlias = android.signingConfigs.debug.keyAlias
-    android.signingConfigs.sign.keyPassword = android.signingConfigs.debug.keyPassword
+    // Fallback: keystore committed in this repo so that every CI build produces
+    // APKs signed with the same key (stable, over-installable updates).
+    android.signingConfigs.sign.storeFile rootProject.file('keystore/svcmgr.p12')
+    android.signingConfigs.sign.storeType 'pkcs12'
+    android.signingConfigs.sign.storePassword 'svcmgr2026'
+    android.signingConfigs.sign.keyAlias 'svcmgr'
+    android.signingConfigs.sign.keyPassword 'svcmgr2026'
 }
