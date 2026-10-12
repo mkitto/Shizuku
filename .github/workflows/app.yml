@@ -58,9 +58,19 @@ jobs:
           Fixed signing key, so newer builds install directly over older ones (same signature).
           Based on RikkaApps/Shizuku, Apache-2.0. Not affiliated with the upstream project.
           Install note: uninstall the official Shizuku first; after first launch, activate via ADB wireless debugging pairing."
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
-          else
-            gh release create "$TAG" "$ASSET" --repo "$GITHUB_REPOSITORY" --target "${GITHUB_SHA}" --title "SvcMgr v${VERSION} (personal build)" --notes "$NOTES"
-          fi
-          echo "Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          publish() {
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+            else
+              gh release create "$TAG" "$ASSET" --repo "$GITHUB_REPOSITORY" --target "${GITHUB_SHA}" --title "SvcMgr v${VERSION} (personal build)" --notes "$NOTES"
+            fi
+          }
+          for attempt in 1 2 3; do
+            if publish; then
+              echo "Release published: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+              break
+            fi
+            echo "publish attempt ${attempt} failed, retrying in 15s..."
+            sleep 15
+          done
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName
